@@ -26,10 +26,14 @@ def resolvePaths(file, outputExt, outputpath=''):
     absPath = Path(file).resolve()
     inputfile = str(absPath)
     if outputpath == '':
-        outputfile = str(absPath.cwd()) + "\\" + os.path.splitext(file)[0] + outputExt
+        outputfile = str(absPath.cwd()) + "\\" + filename + outputExt
     else:
-        outputfile = str(os.path.abspath(outputpath)) + "\\" + filename + outputExt
+        outputfile = str(outputpath) + "\\" + filename + outputExt
     return (inputfile, outputfile)
+
+def resolveOutputPath(outputPath):
+    absPath = Path(outputPath).resolve()
+    return str(absPath) if os.path.isdir(str(absPath)) else ''
 
 def argumentParserSetup():
     parser = argparse.ArgumentParser(description="PDF conversion tool")
@@ -50,7 +54,6 @@ def getArgumentValues(args):
 '''
 Return the list of filepath. Uses glob() to solve wildcards.
 '''
-
 def validFilepath(inputfilenames):
     filepaths=[]
     for inputfile in inputfilenames:
@@ -58,15 +61,15 @@ def validFilepath(inputfilenames):
             filepaths.append(str(file))
     return filepaths
 
+
+
 if __name__  ==  "__main__":
     args = argumentParserSetup()
-    filepaths = validFilepath(getInputfilepaths(args=args))
+    input, output = getArgumentValues(args)
+    output = resolveOutputPath(output)
+    filepaths = validFilepath(input)
     exit(1) if len(filepaths)  <=  0 else True
-    val=filter(isSupportedDocFile,filepaths)
-
-    for file in list(val):
-        if not (args.output is None):
-            inputfile, outputfile = resolvePaths(file,outputpath=args.output, outputExt=".pdf")
-        else:
-            inputfile, outputfile = resolvePaths(file,outputExt=".pdf")
+    files=filter(isSupportedDocFile,filepaths)
+    for file in list(files):
+        inputfile, outputfile = resolvePaths(file,outputpath=output,outputExt=".pdf")
         Docx2PDFConvert(input=str(inputfile), output=outputfile)
