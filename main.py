@@ -38,15 +38,35 @@ def argumentParserSetup():
     parser.add_argument('-outputname', action="store", type=str, help="set output file name")
     args = parser.parse_args()
     return args
+'''
+Returns input and output filepaths provided by the user.
+incase of output is None an empty string '' will be returned
+'''
+def getArgumentValues(args):
+    input = args.input
+    output = args.output if args.output != None else ''
+    return input, output
+
+'''
+Return the list of filepath. Uses glob() to solve wildcards.
+'''
+
+def validFilepath(inputfilenames):
+    filepaths=[]
+    for inputfile in inputfilenames:
+        for file in glob.glob(str(inputfile)):
+            filepaths.append(str(file))
+    return filepaths
 
 if __name__  ==  "__main__":
     args = argumentParserSetup()
-    for inputfile in args.input: #gets input files
-        for file in glob.glob((str(inputfile))): #list for posible filenames; incase wildscards
-            if not isSupportedDocFile(file):
-                continue
-            if not (args.output is None):
-                inputfile, outputfile = resolvePaths(file,outputpath=args.output, outputExt=".pdf")
-            else:
-                inputfile, outputfile = resolvePaths(file,outputExt=".pdf")
-            Docx2PDFConvert(input=str(inputfile), output=outputfile)
+    filepaths = validFilepath(getInputfilepaths(args=args))
+    exit(1) if len(filepaths)  <=  0 else True
+    val=filter(isSupportedDocFile,filepaths)
+
+    for file in list(val):
+        if not (args.output is None):
+            inputfile, outputfile = resolvePaths(file,outputpath=args.output, outputExt=".pdf")
+        else:
+            inputfile, outputfile = resolvePaths(file,outputExt=".pdf")
+        Docx2PDFConvert(input=str(inputfile), output=outputfile)
